@@ -6,23 +6,25 @@ public class Main {
     public static void main(String[] args) {
 //        getCustomerDetails();
 //        insert();
-        setTransition();
+//        setTransition();
+
+        update();
     }
 
     //     Execute a Simple Query
     public static void getCustomerDetails() {
         try (Connection connection = DBConnection.getConnection();
-             PreparedStatement st = connection.prepareStatement("select * from customers");
+             PreparedStatement st = connection.prepareStatement("select * from products");
              ResultSet resultSet = st.executeQuery();
         ) {
 
 
             while (resultSet.next()) {
-                String customer_id = resultSet.getString("customer_id");
-                String name = resultSet.getString("name");
-                String email = resultSet.getString("email");
+                String product_id = resultSet.getString("product_id");
+                String name = resultSet.getString("product_name");
+                int stock = resultSet.getInt("stock_quantity");
 
-                System.out.println(customer_id + "\t\t\t" + name + "\t\t\t\t" + email);
+                System.out.println(product_id + "\t\t\t" + name + "\t\t" + stock);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -97,4 +99,54 @@ public class Main {
             }
         }
     }
+
+
+    static void update() {
+        Connection connection = null;
+        try {
+            connection = DBConnection.getConnection();
+            connection.setAutoCommit(false);
+            try (
+                    Statement createStatement = connection.createStatement();
+                    ResultSet resultSet = createStatement.executeQuery("select * from products");
+                    PreparedStatement st = connection.prepareStatement("UPDATE products set stock_quantity = ?");
+            ) {
+
+                getCustomerDetails();
+                while (resultSet.next()) {
+                    st.setInt(1, resultSet.getInt("stock_quantity") - 10);
+                    st.executeUpdate();
+                    System.out.println("execution done:\t" + resultSet.getString("product_name"));
+                }
+//                explicit throwing error
+                if (false)
+                    throw new SQLException("Explicitly Throwing Error");
+
+                System.out.println("Execution Complete:\tCHANGES DONE");
+                connection.commit();
+                getCustomerDetails();
+            }
+        } catch (SQLException e) {
+            try {
+                System.out.println("ERROR: " + e.getMessage());
+                if (connection != null) {
+                    connection.rollback();
+                    System.out.println("ROLLBACK PROCESS");
+                }
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                } catch (SQLException e) {
+                    System.out.println("Failed to close connection: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+
 }
