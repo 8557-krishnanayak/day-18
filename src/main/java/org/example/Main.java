@@ -5,7 +5,8 @@ import java.sql.*;
 public class Main {
     public static void main(String[] args) {
 //        getCustomerDetails();
-        insert();
+//        insert();
+        setTransition();
     }
 
     //     Execute a Simple Query
@@ -30,7 +31,6 @@ public class Main {
 
     static void insert() {
         try (Connection connection = DBConnection.getConnection();
-
              PreparedStatement st = connection.prepareStatement("INSERT into products " +
                      "(product_id, price, product_name, category_id, stock_quantity, discount_price) " +
                      "values (?,?,?,?,?,?);");
@@ -47,6 +47,54 @@ public class Main {
             System.out.println("Execution Complete: INSERTION DONE");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+
+    static void setTransition() {
+        Connection connection = null;
+        try {
+            connection = DBConnection.getConnection();
+            connection.setAutoCommit(false);
+            try (
+                    PreparedStatement st = connection.prepareStatement("INSERT into products " +
+                            "(product_id, price, product_name, category_id, stock_quantity, discount_price) " +
+                            "values (?,?,?,?,?,?);");
+            ) {
+                st.setInt(1, 98);
+                st.setInt(2, 1000);
+                st.setString(3, "shoes");
+                st.setInt(4, 4);
+                st.setInt(5, 3);
+                st.setInt(6, 900);
+                st.executeUpdate();
+
+//                explicit throwing error
+                if (false)
+                    throw new SQLException("Explicitly Throwing Error");
+
+                System.out.println("Execution Complete: INSERTION DONE");
+                connection.commit();
+            }
+        } catch (SQLException e) {
+            try {
+                System.out.println("ERROR: " + e.getMessage());
+                if (connection != null) {
+                    connection.rollback();
+                    System.out.println("ROLLBACK PROCESS");
+                }
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                } catch (SQLException e) {
+                    System.out.println("Failed to close connection: " + e.getMessage());
+                }
+            }
         }
     }
 }
