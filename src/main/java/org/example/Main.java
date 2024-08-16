@@ -4,14 +4,13 @@ import java.sql.*;
 
 public class Main {
     public static void main(String[] args) {
-//        getCustomerDetails();
-//        insert();
-//        setTransition();
-
+        getCustomerDetails();
+        getProductsDetails();
+        insert();
+        setTransition();
         update();
     }
 
-    //     Execute a Simple Query
     public static void getCustomerDetails() {
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement st = connection.prepareStatement("select * from products");
@@ -26,6 +25,29 @@ public class Main {
 
                 System.out.println(product_id + "\t\t\t" + name + "\t\t" + stock);
             }
+
+//            System.out.println(connection.hashCode());
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //     Execute a Simple Query
+    public static void getProductsDetails() {
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement st = connection.prepareStatement("select * from products");
+             ResultSet resultSet = st.executeQuery();
+        ) {
+
+
+            while (resultSet.next()) {
+                String product_id = resultSet.getString("product_id");
+                String name = resultSet.getString("product_name");
+                int stock = resultSet.getInt("stock_quantity");
+
+                System.out.println(product_id + "\t\t\t" + name + "\t\t" + stock);
+            }
+//            System.out.println(connection.hashCode());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
